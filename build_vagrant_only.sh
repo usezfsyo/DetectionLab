@@ -10,7 +10,7 @@
 set -e
 
 print_usage() {
-  echo "Usage: ./build.sh <virtualbox|vmware_fusion>"
+  echo "Usage: ./build.sh <virtualbox|vmware_fusion|vmware_esxi>"
   exit 0
 }
 
@@ -69,25 +69,29 @@ list_providers() {
     VMWARE_FUSION_PRESENT=$(check_vmware_fusion_installed)
     VAGRANT_VMWARE_PLUGIN_PRESENT=$(check_vmware_vagrant_plugin_installed)
   else
-    # Assume the only other available provider is VirtualBox
+    # Assume the only other available providers are either ESXi or Virtualbox.
     VBOX_PRESENT=$(check_virtualbox_installed)
+    VMWARE_ESXI_PRESENT=1
   fi
 
   (echo >&2 "Available Providers:")
   if [ "$VBOX_PRESENT" == "1" ]; then
     (echo >&2 "virtualbox")
   fi
+  if [ "$VMWARE_ESXI_PRESENT" == "1" ]; then
+    (echo >&2 "vmware_esxi")
+  fi
   if [[ $VMWARE_FUSION_PRESENT -eq 1 ]] && [[ $VAGRANT_VMWARE_PLUGIN_PRESENT -eq 1 ]]; then
     (echo >&2 "vmware_fusion")
   fi
-  if [[ $VBOX_PRESENT -eq 0 ]] && [[ $VMWARE_FUSION_PRESENT -eq 0 ]]; then
+  if [[ $VBOX_PRESENT -eq 0 ]] && [[ $VMWARE_FUSION_PRESENT -eq 0 ]] && [[ $VMWARE_ESXI_PRESENT -eq 0 ]]; then
     (echo >&2 "You need to install a provider such as VirtualBox or VMware Fusion to continue.")
     exit 1
   fi
   (echo >&2 -e "\\nWhich provider would you like to use?")
   read -r PROVIDER
   # Sanity check
-  if [[ "$PROVIDER" != "virtualbox" ]] && [[ "$PROVIDER" != "vmware_fusion" ]]; then
+  if [[ "$PROVIDER" != "virtualbox" ]] && [[ "$PROVIDER" != "vmware_fusion" ]] && [[ "$PROVIDER" != "vmware_esxi" ]]; then
     (echo >&2 "Please choose a valid provider. \"$PROVIDER\" is not a valid option")
     exit 1
   fi
@@ -124,7 +128,7 @@ preflight_checks() {
     exit 1
   fi
   # Check available disk space. Recommend 80GB free, warn if less.
-  FREE_DISK_SPACE=$(df -m "$HOME" | tr -s ' ' | grep '/' | cut -d ' ' -f 4)
+  FREE_DISK_SPACE=$(df -m /dev/sdb1 | tr -s ' ' | grep '/' | cut -d ' ' -f 4)
   if [ "$FREE_DISK_SPACE" -lt 80000 ]; then
     (echo >&2 -e "Warning: You appear to have less than 80GB of HDD space free on your primary partition. If you are using a separate parition, you may ignore this warning.\\n")
     (df >&2 -m "$HOME")
@@ -152,10 +156,16 @@ download_boxes() {
   elif [ "$PROVIDER" == "vmware_fusion" ]; then
     wget "https://www.detectionlab.network/windows_2016_vmware.box" -O "$DL_DIR"/Boxes/windows_2016_vmware.box
     wget "https://www.detectionlab.network/windows_10_vmware.box" -O "$DL_DIR"/Boxes/windows_10_vmware.box
+  elif [ "$PROVIDER" == "vmware_esxi" ]; then
+    wget "https://www.detectionlab.network/windows_2016_vmware.box" -O "$DL_DIR"/Boxes/windows_2016_vmware.box
+    wget "https://www.detectionlab.network/windows_10_vmware.box" -O "$DL_DIR"/Boxes/windows_10_vmware.box
   fi
 
   # Hacky workaround
   if [ "$PROVIDER" == "vmware_fusion" ]; then
+    PROVIDER="vmware"
+  fi
+  if [ "$PROVIDER" == "vmware_esxi" ]; then
     PROVIDER="vmware"
   fi
 
@@ -188,7 +198,7 @@ download_boxes() {
       exit 1
     fi
     # Reset PROVIDER variable
-    PROVIDER="vmware_fusion"
+    PROVIDER="vmware_esxi"
   fi
 }
 
@@ -267,6 +277,9 @@ main() {
         PROVIDER="$1"
         ;;
       vmware_fusion)
+        PROVIDER="$1"
+        ;;
+      vmware_esxi)
         PROVIDER="$1"
         ;;
       *)
