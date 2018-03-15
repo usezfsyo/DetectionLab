@@ -76,13 +76,17 @@ list_providers() {
     VMWARE_FUSION_PRESENT=$(check_vmware_fusion_installed)
     VAGRANT_VMWARE_PLUGIN_PRESENT=$(check_vmware_vagrant_plugin_installed)
   else
-    # Assume the only other available provider is VirtualBox
+    # Assume the only other available providers are either ESXi or Virtualbox.
     VBOX_PRESENT=$(check_virtualbox_installed)
+    VMWARE_ESXI_PRESENT=1
   fi
 
   (echo >&2 "Available Providers:")
   if [ "$VBOX_PRESENT" == "1" ]; then
     (echo >&2 "virtualbox")
+  fi
+  if [ "$VMWARE_ESXI_PRESENT" == "1" ]; then
+    (echo >&2 "vmware_esxi")
   fi
   if [[ $VMWARE_FUSION_PRESENT -eq 1 ]] && [[ $VAGRANT_VMWARE_PLUGIN_PRESENT -eq 1 ]]; then
     (echo >&2 "vmware_fusion")
@@ -94,7 +98,7 @@ list_providers() {
   (echo >&2 -e "\\nWhich provider would you like to use?")
   read -r PROVIDER
   # Sanity check
-  if [[ "$PROVIDER" != "virtualbox" ]] && [[ "$PROVIDER" != "vmware_fusion" ]]; then
+  if [[ "$PROVIDER" != "virtualbox" ]] && [[ "$PROVIDER" != "vmware_fusion" ]] && [[ "$PROVIDER" != "vmware_esxi" ]]; then
     (echo >&2 "Please choose a valid provider. \"$PROVIDER\" is not a valid option")
     exit 1
   fi
@@ -155,6 +159,9 @@ packer_build_box() {
   if [ "$PROVIDER" == "vmware_fusion" ]; then
     PROVIDER="vmware"
   fi
+  if [ "$PROVIDER" == "vmware_esxi" ]; then
+    PROVIDER="vmware"
+  fi  
   cd "$DL_DIR/Packer"
   (echo >&2 "Using Packer to build the $BOX Box. This can take 90-180 minutes depending on bandwidth and hardware.")
   if ! $(which packer) build --only="$PROVIDER-iso" "$BOX".json; then
@@ -169,6 +176,9 @@ move_boxes() {
   DL_DIR="$2"
   # Hacky workaround for VMware
   if [ "$PROVIDER" == "vmware_fusion" ]; then
+    PROVIDER="vmware"
+  fi
+  if [ "$PROVIDER" == "vmware_esxi" ]; then
     PROVIDER="vmware"
   fi
   mv "$DL_DIR"/Packer/*.box "$DL_DIR"/Boxes
@@ -209,9 +219,9 @@ vagrant_reload_host() {
 post_build_checks() {
   # If the curl operation fails, we'll just leave the variable equal to 0
   # This is needed to prevent the script from exiting if the curl operation fails
-  CALDERA_CHECK=$(curl -ks -m 2 https://192.168.38.5:8888 | grep -c '302: Found' || echo "")
-  SPLUNK_CHECK=$(curl -ks -m 2 https://192.168.38.5:8000/en-US/account/login?return_to=%2Fen-US%2F | grep -c 'This browser is not supported by Splunk' || echo "")
-  FLEET_CHECK=$(curl -ks -m 2 https://192.168.38.5:8412 | grep -c 'Kolide Fleet' || echo "")
+  CALDERA_CHECK=$(curl -ks -m 2 https://10.0.4.5:8888 | grep -c '302: Found' || echo "")
+  SPLUNK_CHECK=$(curl -ks -m 2 https://10.0.4.5:8000/en-US/account/login?return_to=%2Fen-US%2F | grep -c 'This browser is not supported by Splunk' || echo "")
+  FLEET_CHECK=$(curl -ks -m 2 https://10.0.4.5:8412 | grep -c 'Kolide Fleet' || echo "")
 
   BASH_MAJOR_VERSION=$(/bin/bash --version | grep 'GNU bash' | grep -o version\.\.. | cut -d ' ' -f 2 | cut -d '.' -f 1)
   # Associative arrays are only supported in bash 4 and up
@@ -260,6 +270,9 @@ main() {
         ;;
       vmware_fusion)
         PROVIDER="$1"
+        ;;
+      vmware_esxi)
+        PROVICER="$1"
         ;;
       *)
         echo "\"$1\" is not a valid provider. Listing available providers:"

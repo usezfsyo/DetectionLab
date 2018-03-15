@@ -90,9 +90,9 @@ $ packer build --only=[vmware|virtualbox]-iso windows_2016.json
   * Provision the WEF host and configure it as a Windows Event Collector in the Servers OU
   * Provision the Win10 host and configure it as a computer in the Workstations OU
 
-7. Navigate to https://192.168.38.5:8000 in a browser to access the Splunk instance on logger. Default credentials are admin:changeme (you will have the option to change them on the next screen)
-8. Navigate to https://192.168.38.5:8412 in a browser to access the Fleet server on logger. Default credentials are admin:admin123#. Query packs are pre-configured with queries from [palantir/osquery-configuration](https://github.com/palantir/osquery-configuration).
-9. Navigate to https://192.168.38.5:8888 in a browser to access the Caldera server on logger. Default credentials are admin:caldera.
+7. Navigate to https://10.0.4.5:8000 in a browser to access the Splunk instance on logger. Default credentials are admin:changeme (you will have the option to change them on the next screen)
+8. Navigate to https://10.0.4.5:8412 in a browser to access the Fleet server on logger. Default credentials are admin:admin123#. Query packs are pre-configured with queries from [palantir/osquery-configuration](https://github.com/palantir/osquery-configuration).
+9. Navigate to https://10.0.4.5:8888 in a browser to access the Caldera server on logger. Default credentials are admin:caldera.
 
 ## Basic Vagrant Usage
 Vagrant commands must be run from the "Vagrant" folder.
@@ -113,9 +113,9 @@ Vagrant commands must be run from the "Vagrant" folder.
 ## Lab Information
 * Domain Name: windomain.local
 * Admininstrator login: vagrant:vagrant
-* Fleet login: https://192.168.38.5:8412 - admin:admin123#
-* Splunk login: https://192.168.38.5:8000 - admin:changeme
-* Caldera login: https://192.168.38.5:8888 - admin:caldera
+* Fleet login: https://10.0.4.5:8412 - admin:admin123#
+* Splunk login: https://10.0.4.5:8000 - admin:changeme
+* Caldera login: https://10.0.4.5:8888 - admin:caldera
 
 ## Lab Hosts
 * DC - Windows 2016 Domain Controller

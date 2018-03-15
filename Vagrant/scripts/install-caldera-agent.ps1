@@ -1,7 +1,7 @@
 # Purpose: Installs the Caldera agent on the host
 
 # Add /etc/hosts entry
-Add-Content "c:\windows\system32\drivers\etc\hosts" "        192.168.38.5    logger"
+Add-Content "c:\windows\system32\drivers\etc\hosts" "        10.0.4.5    logger"
 
 # Make the directory
 New-Item "c:\Program Files\cagent" -type directory
