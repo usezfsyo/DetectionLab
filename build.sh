@@ -10,7 +10,7 @@
 set -e
 
 print_usage() {
-  echo "Usage: ./build.sh <virtualbox|vmware_fusion>"
+  echo "Usage: ./build.sh <virtualbox|vmware_fusion|vmware_esxi>"
   exit 0
 }
 
@@ -91,7 +91,7 @@ list_providers() {
   if [[ $VMWARE_FUSION_PRESENT -eq 1 ]] && [[ $VAGRANT_VMWARE_PLUGIN_PRESENT -eq 1 ]]; then
     (echo >&2 "vmware_fusion")
   fi
-  if [[ $VBOX_PRESENT -eq 0 ]] && [[ $VMWARE_FUSION_PRESENT -eq 0 ]]; then
+  if [[ $VBOX_PRESENT -eq 0 ]] && [[ $VMWARE_FUSION_PRESENT -eq 0 ]] && [[ $VMWARE_ESXI_PRESENT -eq 0 ]]; then
     (echo >&2 "You need to install a provider such as VirtualBox or VMware Fusion to continue.")
     exit 1
   fi
